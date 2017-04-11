@@ -47,10 +47,10 @@ fi
 
 if [ $do_build -eq 1 ]; then
   # build
-  scons -j8 release=1 third_party --config=force
-  scons -j8 release=1
+  scons -j8 release=1 third_party cc_path=/opt/centos/devtoolset-1.1/root/usr/bin --config=force
+  scons -j8 release=1 cc_path=/opt/centos/devtoolset-1.1/root/usr/bin
   # deploy files for packaging.
-  scons -j8 release=1 installdir=$PACKAGE_DIR install
+  scons -j8 release=1 installdir=$PACKAGE_DIR cc_path=/opt/centos/devtoolset-1.1/root/usr/bin install
   #cd ..
   #scons -j8  installdir=$PACKAGE_DIR install
   #cd -

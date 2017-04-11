@@ -20,6 +20,9 @@
 #ifndef GEO_EARTH_ENTERPRISE_SRC_FUSION_GEPUBLISH_GEPUBLISHMANAGERHELPER_H_
 #define GEO_EARTH_ENTERPRISE_SRC_FUSION_GEPUBLISH_GEPUBLISHMANAGERHELPER_H_
 
+// Included to fix error finding ptrdiff_t
+#include <stddef.h>
+
 #include <python2.7/Python.h>  // Note: should be first in include list.
 
 #include <string>
