@@ -40,8 +40,10 @@ INSTALL_LOG="$INSTALL_LOG_DIR/geserver_install_$(date +%Y_%m_%d.%H%M%S).log"
 
 # user names
 GRPNAME="gegroup"
-GEPGUSER_NAME="gepguser"
-GEAPACHEUSER_NAME="geapacheuser"
+DEFAULTGEPGUSER_NAME="gepguser"
+DEFAULTGEAPACHEUSER_NAME="geapacheuser"
+GEPGUSER_NAME=$DEFAULTGEPGUSER_NAME
+GEAPACHEUSER_NAME=$DEFAULTGEAPACHEUSER_NAME
 
 SERVER_INSTALL_OR_UPGRADE="install"
 GEE_CHECK_CONFIG_SCRIPT="/opt/google/gehttpd/cgi-bin/set_geecheck_config.py"
@@ -208,6 +210,15 @@ show_intro()
 show_help()
 {
   echo -e "\nUsage: \tsudo ./install_server.sh [-h] [-dir /tmp/fusion_os_install -hnf -hnmf]\n"
+  echo -e "-ua \t\tApache User Name - the user name to use for Apache webserver. Default is [$DEFAULTGEAPACHEUSER_NAME]. \n\t\tNote: this is only used for new installations."
+  echo -e "-up \t\tPostgres User Name - the user name to use for Postgres database. Default is [$DEFAULTGEPGUSER_NAME]. \n\t\tNote: this is only used for new installations."
+  echo -e "-g \t\tUser Group Name - the group name to use for the Fusion user. Default is [$DEFAULTGROUPNAME]. \n\t\tNote: this is only used for new installations."
+  #echo -e "-ar \t\tAsset Root Name - the name of the asset root volume.  Default is [$ASSET_ROOT]. \n\t\tNote: this is only used for new installations. Specify absolute paths only."
+  #echo -e "-ar \t\tPublish Root Name - the name of the publish root volume.  Default is [$PUBLISHER_ROOT]. \n\t\tNote: this is only used for new installations. Specify absolute paths only."
+  #echo -e "-nobk \t\tNo Backup - do not backup the current server setup. Default is to backup \n\t\tthe setup before installing."
+  #echo -e "-nop \t\tNo Purge - do not delete the temporary install directory upon successful run of the installer."
+  #echo -e "\t\tDefault is to delete the directory after successful installation."
+  #echo -e "-nostart \tDo Not Start Server - after install, do not start the server daemon.  Default is to start the daemon."
 
   echo -e "-h --help \tHelp - display this help screen"
   echo -e "-dir \t\tTemp Install Directory - specify the temporary install directory. Default is [$TMPINSTALLDIR]."
@@ -236,6 +247,48 @@ parse_arguments()
         show_help
         parse_arguments_retval=1
         break
+        ;;
+      -ua)
+        show_user_group_recommendation=true
+
+        if [ $IS_NEWINSTALL == false ]; then
+          echo -e "\nYou cannot modify the apache user name using the installer because Google Earth Server is already installed."
+          parse_arguments_retval=1
+          break
+        else
+          shift
+
+          if is_valid_alphanumeric ${1// }; then
+            GEAPACHEUSER_NAME=${1// }
+          else
+            echo -e "\nThe apache user name you specified is not valid. Valid characters are"
+            echo -e "upper/lowercase letters, numbers, dashes and the underscore characters. The user"
+            echo -e "name cannot start with a number or dash."
+            parse_arguments_retval=1
+            break
+          fi
+        fi
+        ;;
+      -ua)
+        show_user_group_recommendation=true
+
+        if [ $IS_NEWINSTALL == false ]; then
+          echo -e "\nYou cannot modify the apache user name using the installer because Google Earth Server is already installed."
+          parse_arguments_retval=1
+          break
+        else
+          shift
+
+          if is_valid_alphanumeric ${1// }; then
+            GEAPACHEUSER_NAME=${1// }
+          else
+            echo -e "\nThe apache user name you specified is not valid. Valid characters are"
+            echo -e "upper/lowercase letters, numbers, dashes and the underscore characters. The user"
+            echo -e "name cannot start with a number or dash."
+            parse_arguments_retval=1
+            break
+          fi
+        fi
         ;;
       -hnf)
         BADHOSTNAMEOVERRIDE=true;
@@ -266,6 +319,25 @@ parse_arguments()
       shift
     fi
   done
+
+  # show recommended label if the user attempts to change the default fusion user or group
+  if [ $show_user_group_recommendation == true ]; then
+      echo -e "\nRECOMMENDED:"
+      echo -e "\nIt is strongly recommended that you use the default values for the fusion"
+      echo -e "  username and group."
+      echo -e "\nDefault Apache User: \t\t\t$DEFAULTGEAPACHEUSER_NAME"
+      echo -e "Default Postgres User: \t\t\t$DEFAULTGEPGUSER_NAME"
+      echo -e "Default GE User Group: \t\t\t$DEFAULTGROUPNAME"
+      echo -e "----------------"
+      echo -e "Selected Apache User: \t\t\t$DEFAULTGEAPACHEUSER_NAME"
+      echo -e "Selected Postgres User: \t\t$DEFAULTGEPGUSER_NAME"
+      echo -e "Selected GE User Group: \t\t$GROUPNAME"
+
+      # START WORK HERE
+      if ! prompt_to_quit "X (Exit) the installer and change the asset root location - C (Continue) to use the asset root that you have specified."; then
+          parse_arguments_retval=1
+      fi  
+  fi
 
   return $parse_arguments_retval;
 }

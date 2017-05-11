@@ -197,11 +197,11 @@ show_mismatchedhostname()
 {
     echo -e "\nThe hostname of this machine does not match the fully-qualified hostname."
     echo -e "$SOFTWARE_NAME requires that they match for local publishing to function properly."
-    # Chris: I took out the message about updating the hostname because this script doesn't actually do it.
     # TODO Add some instructions on how to update hostname
 }
 
 check_group() {
+    # TODO we should check to see if a group was already created from a previous installation
     GROUP_EXISTS=$(getent group $GROUPNAME)
 
     # add group if it does not exist
@@ -232,7 +232,7 @@ create_links()
 
     if [ ! -L "$BASEINSTALLDIR_OPT/etc" ]; then
         ln -s $BASEINSTALLDIR_ETC $BASEINSTALLDIR_OPT/etc
-    fi 
+    fi
 
     if [ ! -L "$BASEINSTALLDIR_OPT/log" ]; then
         ln -s $BASEINSTALLDIR_VAR/log $BASEINSTALLDIR_OPT/log
