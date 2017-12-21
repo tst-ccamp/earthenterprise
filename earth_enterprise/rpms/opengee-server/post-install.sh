@@ -20,6 +20,7 @@ set +x
 # Definitions
 PUBLISHER_ROOT="/gevol/published_dbs"
 INITSCRIPTUPDATE="/usr/sbin/update-rc.d"
+PGSQL="/var/opt/google/pgsql"
 PGSQL_DATA="/var/opt/google/pgsql/data"
 PGSQL_LOGS="/var/opt/google/pgsql/logs"
 PGSQL_PROGRAM="/opt/google/bin/pg_ctl"
@@ -169,7 +170,15 @@ fix_postinstall_filepermissions()
 reset_pgdb()
 {
     # a) Always do an upgrade of the psql db
-    echo 2 | run_as_user "$GEPGUSER" "/opt/google/bin/geresetpgdb upgrade"
+    DB_BACKUP=""
+    DB_BACKUP_LATEST="$(ls -td -- $PGSQL/data.backup_dump*/ | head -n 1)"
+    echo "Latest backup: $DB_BACKUP_LATEST"
+    if [ -d "$DB_BACKUP_LATEST" ]; then
+        DB_BACKUP="$DB_BACKUP_LATEST"
+        echo "Restoring data backup from: $DB_BACKUP"
+    fi
+
+    echo 2 | run_as_user "$GEPGUSER" "/opt/google/bin/geresetpgdb upgrade $DB_BACKUP"
     echo -e "upgrade done"
 
     # b) Check for Success of PostGresDb
