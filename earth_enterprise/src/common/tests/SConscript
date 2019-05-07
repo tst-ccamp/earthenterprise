@@ -30,13 +30,17 @@ map(lambda test: env.test(test, [test + '.cpp'],
      'projection_test',
      ])
 
-
 map(lambda test: env.test(test, [test + '.cpp'],
                           LIBS=['geutil', 'png12']),
     ['multirange_tests',
      'dottedversion_tests',
      ])
 
+
+map(lambda test: env.test(test, [test + '.cpp'],
+                          LIBS=['gecommon', 'gtest', 'gexml', 'xerces-c']),
+    ['khxml_test',
+     ])
 
 map(lambda test: env.test(test, [test + '.cpp'],
                           LIBS=['gecommon', 'geutil', 'gtest', 'png12']),

@@ -31,6 +31,13 @@
 #include <memory>
 #include <string>
 #include <qstring.h>
+#include <map>
+#include <khFileUtils.h>
+#include "common/khConfigFileParser.h"
+#include <string>
+#include <algorithm>
+#include <exception>
+#include <cstdlib>
 
 namespace khxml = xercesc;
 
@@ -190,6 +197,60 @@ class GEParsedDocument : public GEDocument {
     GEParsedDocument(const std::string &);
     GEParsedDocument(const std::string &, const std::string &);
     ~GEParsedDocument();
+};
+
+// A simple memory manager class that allows us to ensure all memory used by
+// Xerces is released. We keep track of memory that is allocated but not
+// deallocated and deallocate it all when terminating Xerces.
+class SimpleMemoryManager : public khxml::MemoryManager {
+  private:
+    typedef uint8_t byte;
+    khMutex mutex;
+    std::map<byte *, XMLSize_t> allocated;
+    XMLSize_t allocatedSize;
+  public:
+    static SimpleMemoryManager memoryManager;
+    
+    virtual MemoryManager * getExceptionMemoryManager() { return this; }
+    XMLSize_t size() { return allocatedSize; }
+    // Allocate the requested memory and store it in the list of allocated memory
+    virtual void * allocate(XMLSize_t size) {
+      khLockGuard guard(mutex);
+      byte * p = new byte[size];
+      allocated[p] = size;
+      allocatedSize += size;
+      return p;
+    }
+    // Deallocate the memory and remove it from the list of allocated memory
+    virtual void deallocate(void * p) {
+      if (p == nullptr) return;
+      byte * bytep = static_cast<byte *>(p);
+      khLockGuard guard(mutex);
+      std::map<byte *, XMLSize_t>::iterator iter = allocated.find(bytep);
+      if (iter != allocated.end()) {
+        allocatedSize -= iter->second;
+        allocated.erase(iter);
+      }
+      else {
+        notify(NFY_WARN, "Deallocating Xerces memory that was never allocated.");
+      }
+      delete [] bytep;
+    }
+    // Deallocate anything that hasn't been deallocated yet
+    void deallocateAll() {
+      khLockGuard guard(mutex);
+      for (std::pair<byte *, XMLSize_t> entry : allocated) {
+        delete [] entry.first;
+      }
+      allocated.clear();
+      allocatedSize = 0;
+    }
+    // Clear storage without deallocating anything
+    void clear() {
+      khLockGuard guard(mutex);
+      allocated.clear();
+      allocatedSize = 0;
+    }
 };
 
 #endif /* __KHXML_H */
