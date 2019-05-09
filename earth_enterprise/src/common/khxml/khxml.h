@@ -191,7 +191,8 @@ class GEParsedDocument : public GEDocument {
       virtual bool handleError(const khxml::DOMError &err);
     };
     FatalErrorHandler fatalErrorHandler;
-    khxml::DOMLSParser * parser = nullptr;
+    static khxml::DOMLSParser * parser;
+    static khMutex mutex;
     void CreateParser();
   public:
     GEParsedDocument(const std::string &);
@@ -210,7 +211,7 @@ class SimpleMemoryManager : public khxml::MemoryManager {
     XMLSize_t allocatedSize;
   public:
     static SimpleMemoryManager memoryManager;
-    
+
     virtual MemoryManager * getExceptionMemoryManager() { return this; }
     XMLSize_t size() { return allocatedSize; }
     // Allocate the requested memory and store it in the list of allocated memory

@@ -442,6 +442,9 @@ bool GEDocument::writeToString(std::string &buf) {
   return success;
 }
 
+khxml::DOMLSParser * GEParsedDocument::parser = nullptr;
+khMutex GEParsedDocument::mutex;
+
 bool GEParsedDocument::FatalErrorHandler::handleError(const DOMError &err) {
   if (err.getSeverity() >= DOMError::DOM_SEVERITY_FATAL_ERROR) {
     char* message = XMLString::transcode(err.getMessage());
@@ -454,18 +457,27 @@ bool GEParsedDocument::FatalErrorHandler::handleError(const DOMError &err) {
 
 void GEParsedDocument::CreateParser() {
   try {
-    // "LS" -> Load/Save extensions
-    DOMImplementationLS* impl = static_cast<DOMImplementationLS*>(
+    khxml::DOMLSParser * myParser = nullptr;
+    {
+      khLockGuard guard(mutex);
+      myParser = parser;
+    }
+    if (!myParser) {
+      khLockGuard guard(mutex);
+
+      // "LS" -> Load/Save extensions
+      DOMImplementationLS* impl = static_cast<DOMImplementationLS*>(
         DOMImplementationRegistry::getDOMImplementation(ToXMLStr("LS")));
-    parser =
-      impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0, &SimpleMemoryManager::memoryManager);
-    // optionally you can set some features on this builder
-    if (parser->getDomConfig()->canSetParameter(XMLUni::fgDOMValidate, true))
-      parser->getDomConfig()->setParameter(XMLUni::fgDOMValidate, true);
-    if (parser->getDomConfig()->canSetParameter(XMLUni::fgDOMNamespaces, true))
-      parser->getDomConfig()->setParameter(XMLUni::fgDOMNamespaces, true);
-    parser->getDomConfig()->setParameter(XMLUni::fgDOMErrorHandler,
-                                         &fatalErrorHandler);
+      parser =
+        impl->createLSParser(DOMImplementationLS::MODE_SYNCHRONOUS, 0, &SimpleMemoryManager::memoryManager);
+      // optionally you can set some features on this builder
+      if (parser->getDomConfig()->canSetParameter(XMLUni::fgDOMValidate, true))
+        parser->getDomConfig()->setParameter(XMLUni::fgDOMValidate, false);
+      if (parser->getDomConfig()->canSetParameter(XMLUni::fgDOMNamespaces, true))
+        parser->getDomConfig()->setParameter(XMLUni::fgDOMNamespaces, true);
+      parser->getDomConfig()->setParameter(XMLUni::fgDOMErrorHandler,
+                                          &fatalErrorHandler);
+    }
   } catch (...) {
     notify(NFY_DEBUG, "Error when trying to create DOMLSParser");
     parser = nullptr;
@@ -492,6 +504,7 @@ GEParsedDocument::GEParsedDocument(const std::string &filename) {
       // Note: parseURI doesn't handle missing files nicely...returns
       // invalid doc object. Must check file existence ourselves.
       if (khExists(filename)) {
+        khLockGuard guard(mutex);
         doc = parser->parseURI(filename.c_str());
       } else {
         notify(NFY_WARN, "XML file does not exist: %s", filename.c_str());
@@ -538,7 +551,10 @@ GEParsedDocument::GEParsedDocument(const std::string &buf,
       Wrapper4InputSource inputSource(&memBufIS,
                                       false,  // don't adopt input source
                                       &SimpleMemoryManager::memoryManager);
-      doc = parser->parse(&inputSource);
+      {
+        khLockGuard guard(mutex);
+        doc = parser->parse(&inputSource);
+      }
     }
   } catch (const XMLException& toCatch) {
     notify(NFY_WARN, "Unable to read XML: %s",
@@ -557,8 +573,8 @@ GEParsedDocument::GEParsedDocument(const std::string &buf,
 GEParsedDocument::~GEParsedDocument() {
   try {
     if (parser) {
-      parser->release();
-      // Don't release the document - releasing the parser will release the document
+      khLockGuard guard(mutex);
+      doc->release();
     }
   }
   catch (...) {
