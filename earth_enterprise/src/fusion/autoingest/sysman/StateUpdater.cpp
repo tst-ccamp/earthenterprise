@@ -132,6 +132,16 @@ void StateUpdater::FillInVertex(
   version->DependentChildren(dependents);
   // Add the dependent children first. When we add the children next it will
   // skip any that were already added
+  // TODO: I think there are cases where dependent children are actually
+  // grandchildren of the asset. It might be better to have duplicate CHILD/
+  // DEPENDENT_CHILD links to handle that case. Then we wouldn't have to
+  // check the state of DEPENDENT_CHILDREN when updating states.
+  // The only reason we need to mark DEPENDENT_CHILDREN is because
+  // SetStateForSelfAndDependents uses it. When you're doing a resume you
+  // set the states of the assets, its dependents, and their dependents to new.
+  // Thus, we need to know the difference between children and dependent
+  // children. If we can think of another way to do that we can avoid marking
+  // dependent chldren in the tree at all.
   for (const auto & dep : dependents) {
     auto depVertex = AddEmptyVertex(dep, vertices, index, toFillIn);
     AddEdge(myVertex, depVertex, {DEPENDENT_CHILD});

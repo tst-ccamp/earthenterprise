@@ -106,7 +106,7 @@ class AssetHandle_ : public AssetHandleInterface<Impl_> {
   AssetHandle_(const SharedString &ref_, StorageManager<Impl> * sm = nullptr)
     : ref(ref_), handle() {
     // If the user specified a storage manager, bind the asset right away. That
-    // way we don't have to save a pointer to it.
+    // way we don't have to save a pointer to the storage manager.
     if (sm) Bind(sm);
   }
 

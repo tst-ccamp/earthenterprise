@@ -50,6 +50,15 @@ class StateUpdater
 
     typedef boost::adjacency_list<
         boost::setS,
+        // TODO: We use a setS for edges to ensure that there aren't duplicate
+        // edges. However, we check for duplicate vertices separately, so it
+        // might be cheaper to use a vecS to store vertices and avoid the
+        // lookup cost of a set. We could also get rid of the index in
+        // AssetIndex and the InNodeVertexIndexMap class and the 3 functions
+        // right below it in StateUpdater.cpp since vecS handles that for us.
+        // However, when I make that change I get a compile error, and Google
+        // indicates that it's a bug in Boost. I suppose we could get similar
+        // performance if we switched to a hash_setS.
         boost::setS,
         boost::directedS,
         AssetVertex,
