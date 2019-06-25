@@ -47,13 +47,14 @@ class AssetHandle_ : public AssetHandleInterface<Impl_> {
   using HandleType = typename StorageManager<Impl>::HandleType;
   struct undefined_type; // never defined.  Just used for bool operations
 
- protected:
   static inline StorageManager<Impl> & storageManager();
 
+ protected:
   inline void DoBind(
       bool checkFileExistenceFirst,
-      bool addToCache) const {
-    handle = storageManager().Get(this, checkFileExistenceFirst, addToCache, isMutable());
+      bool addToCache,
+      StorageManager<Impl> * sm = &storageManager()) const {
+    handle = sm->Get(this, checkFileExistenceFirst, addToCache, isMutable());
   }
 
   virtual bool isMutable() const { return false; }
@@ -93,16 +94,21 @@ class AssetHandle_ : public AssetHandleInterface<Impl_> {
   SharedString ref;
   mutable HandleType handle;
 
-  inline void Bind(void) const {
+  inline void Bind(StorageManager<Impl> * sm = &storageManager()) const {
     if (!handle) {
-      DoBind(false /* don't check file */, true /* add to cache */);
+      DoBind(false /* don't check file */, true /* add to cache */, sm);
     }
   }
 
  public:
   AssetHandle_(void) : ref(), handle() { }
   AssetHandle_(const std::string &ref_) : ref(ref_), handle() { }
-  AssetHandle_(const SharedString &ref_) : ref(ref_), handle() { }
+  AssetHandle_(const SharedString &ref_, StorageManager<Impl> * sm = nullptr)
+    : ref(ref_), handle() {
+    // If the user specified a storage manager, bind the asset right away. That
+    // way we don't have to save a pointer to it.
+    if (sm) Bind(sm);
+  }
 
   // the compiler generated assignment and copy constructor are fine for us
   // ref & handle have stable copy semantics and we don't have to worry about
@@ -161,7 +167,8 @@ class DerivedAssetHandle_ : public virtual Base_ {
 
   DerivedAssetHandle_(void) : Base() { }
   DerivedAssetHandle_(const std::string &ref_) : Base(ref_) { }
-  DerivedAssetHandle_(const SharedString &ref_) : Base(ref_) { }
+  DerivedAssetHandle_(const SharedString &ref_, StorageManager<typename Base::Impl> * sm = nullptr) :
+    Base(ref_, sm) { }
 
   // it's OK to construct a derived from a base, we just check first
   // and clear the handle if the types don't match

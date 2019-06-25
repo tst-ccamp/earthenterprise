@@ -22,6 +22,7 @@
 #include <list>
 #include <map>
 
+#include "AssetVersion.h"
 #include "autoingest/.idl/storage/AssetDefs.h"
 #include "common/SharedString.h"
 
@@ -59,6 +60,7 @@ class StateUpdater
     friend struct boost::property_map<TreeType, boost::vertex_index_t>;
     class UpdateStateVisitor;
 
+    StorageManager<AssetVersionImpl> * const storageManager;
     TreeType tree;
 
     TreeType::vertex_descriptor BuildTree(const SharedString & ref);
@@ -84,7 +86,8 @@ class StateUpdater
         AssetDefs::State newState,
         bool sendNotifications);
   public:
-    StateUpdater() = default;
+    StateUpdater(StorageManager<AssetVersionImpl> * sm = &AssetVersion::storageManager()) :
+      storageManager(sm) {}
     void SetStateForRefAndDependents(
         const SharedString & ref,
         AssetDefs::State newState,

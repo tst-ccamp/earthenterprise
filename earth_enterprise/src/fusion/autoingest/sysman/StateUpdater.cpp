@@ -118,7 +118,7 @@ void StateUpdater::FillInVertex(
     list<TreeType::vertex_descriptor> & toFillIn) {
   SharedString name = tree[myVertex].name;
   notify(NFY_PROGRESS, "Loading '%s' for state update", name.toString().c_str());
-  AssetVersionD version(name);
+  AssetVersionD version(name, storageManager);
   if (!version) {
     notify(NFY_WARN, "Could not load asset '%s' which is referenced by another asset.",
            name.toString().c_str());
@@ -209,7 +209,7 @@ void StateUpdater::SetState(
     bool sendNotifications) {
   SharedString name = tree[vertex].name;
   if (newState != tree[vertex].state) {
-    MutableAssetVersionD version(name);
+    MutableAssetVersionD version(name, storageManager);
     if (version) {
       // Set the state. The OnStateChange handler will take care
       // of stopping any running tasks, etc.
@@ -361,7 +361,7 @@ class StateUpdater::UpdateStateVisitor : public default_dfs_visitor {
         const StateUpdater::TreeType & tree) const {
       SharedString name = tree[vertex].name;
       notify(NFY_PROGRESS, "Calculating state for '%s'", name.toString().c_str());
-      AssetVersionD version(name);
+      AssetVersionD version(name, updater->storageManager);
       if (!version) {
         // This shoud never happen - we had to successfully load the asset
         // previously to get it into the tree.

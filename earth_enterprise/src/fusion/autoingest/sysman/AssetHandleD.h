@@ -25,6 +25,7 @@
 #include "common/khCppStd.h"
 #include "common/khRefCounter.h"
 #include "common/SharedString.h"
+#include "StorageManager.h"
 
 
 /******************************************************************************
@@ -164,8 +165,8 @@ class MutableAssetHandleD_ : public virtual Base_ {
       // It's the only one that has state anyway.  Also, explicitly calling the virtual base
       // class puts an explicit check to ensure BBase a virtural base class of this class.
       BBase(ref_), Base() { }
-  MutableAssetHandleD_(const SharedString &ref_) :
-      BBase(ref_), Base() { }
+  MutableAssetHandleD_(const SharedString &ref_, StorageManager<typename BBase::Impl> * sm = nullptr) :
+      BBase(ref_, sm), Base() { }
 
   // you should be able to create a mutable handle from the non-mutable
   // equivalent. Don't automatically bind it and add it to the dirtyMap
