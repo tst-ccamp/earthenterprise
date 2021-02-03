@@ -36,7 +36,7 @@
 void ValidateAssetRootForUpgrade(const AssetRootStatus &status, bool noprompt,
                                  bool nochown);
 void WarnAboutPendingTasks(void);
-void UpgradeAssetRoot(const DottedVersion &version);
+void UpgradeAssetRoot(const DottedVersion &version, bool secure);
 void UpgradeFrom2_4_X(void);
 void UpgradeFrom2_5_X(const DottedVersion &version);
 void UpgradeFrom3_0_X(const DottedVersion &version);
@@ -63,7 +63,8 @@ usage(const char* prog, const char* msg = 0, ...) {
      "  --groupname <name>:  Group membership of Fusion user (default gegroup)\n"
      "  --nochown :          do not attempt to fix privileges\n"
      "  --noprompt:          do not prompt for more information, returns -1\n"
-     "                       to indicate an error if command fails or has insufficient arguments\n",
+     "                       to indicate an error if command fails or has insufficient arguments\n"
+     "  --secure             Removes world read and write permissions.\n",
      prog, CommandlineAssetRootDefault().c_str());
   exit(1);
 }
@@ -79,6 +80,7 @@ main(int argc, char *argv[]) {
     std::string groupname = Systemrc::UserGroupname();
     bool noprompt = false;
     bool nochown = false;
+    bool secure = false;
 
     khGetopt options;
     options.helpOpt(help);
@@ -87,6 +89,7 @@ main(int argc, char *argv[]) {
     options.opt("groupname", groupname);
     options.opt("noprompt", noprompt);
     options.opt("nochown", nochown);
+    options.opt("secure", secure);
 
     if (!options.processAll(argc, argv, argn) || help) {
       usage(argv[0]);
@@ -111,7 +114,7 @@ main(int argc, char *argv[]) {
     AssetDefs::OverrideAssetRoot(status.assetroot_);
 
     // do the actual upgrade
-    UpgradeAssetRoot(status.version_);
+    UpgradeAssetRoot(status.version_, secure);
 
 
   } catch (const std::exception &e) {
@@ -129,12 +132,12 @@ void ValidateAssetRootForUpgrade(const AssetRootStatus &status, bool noprompt,
   }
 
   if (!status.dir_exists_) {
-    throw khException(kh::tr("%1 doesn't exist.").arg(status.assetroot_));
+    throw khException(kh::tr("%1 doesn't exist.").arg(status.assetroot_.c_str()));
   }
 
   if (!status.has_volumes_) {
     throw khException(kh::tr("%1 isn't a valid asset root.")
-                      .arg(status.assetroot_));
+                      .arg(status.assetroot_.c_str()));
   }
 
   if (!status.IsThisMachineMaster()) {
@@ -147,12 +150,12 @@ void ValidateAssetRootForUpgrade(const AssetRootStatus &status, bool noprompt,
 "then run the following command to fix it:\n"
 "  geconfigureassetroot --assetroot %6 --fixmasterhost\n"
 "then run geupgradeassetroot again.")
-                      .arg(status.master_host_)
-                      .arg(status.assetroot_)
-                      .arg(status.master_host_)
-                      .arg(status.assetroot_)
-                      .arg(status.master_host_)
-                      .arg(status.assetroot_)
+                      .arg(status.master_host_.c_str())
+                      .arg(status.assetroot_.c_str())
+                      .arg(status.master_host_.c_str())
+                      .arg(status.assetroot_.c_str())
+                      .arg(status.master_host_.c_str())
+                      .arg(status.assetroot_.c_str())
                       );
   }
 
@@ -161,8 +164,8 @@ void ValidateAssetRootForUpgrade(const AssetRootStatus &status, bool noprompt,
     throw khException(kh::tr(
 "%1 is configured for Google Earth Fusion version %2.\n"
 "Upgrades are not possible from versions older than 2.4.")
-                      .arg(status.assetroot_)
-                      .arg(status.version_));
+                      .arg(status.assetroot_.c_str())
+                      .arg(status.version_.c_str()));
   }
 
   // we don't check AssetRootNeedsUpgrade here
@@ -183,10 +186,10 @@ void ValidateAssetRootForUpgrade(const AssetRootStatus &status, bool noprompt,
 }
 
 
-void UpgradeAssetRoot(const DottedVersion &version) {
+void UpgradeAssetRoot(const DottedVersion &version, bool secure) {
 
   // Since we're upgrading, go ahead and fix perms on special files
-  FixSpecialPerms(AssetDefs::AssetRoot());
+  FixSpecialPerms(AssetDefs::AssetRoot(), secure);
 
   WarnAboutPendingTasks();
 

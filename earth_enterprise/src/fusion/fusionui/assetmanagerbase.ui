@@ -1,6 +1,7 @@
 <!DOCTYPE UI><UI version="3.3" stdsetdef="1">
 <class>AssetManagerBase</class>
-<comment>  Copyright 2017 Google Inc.
+<comment>  Copyright 2020 the Open GEE Contributors.
+ Copyright 2017 Google Inc.
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -21,6 +22,18 @@
             <width>816</width>
             <height>646</height>
         </rect>
+    </property>
+    <property name="maximumSize">
+        <size>
+            <width>3000</width>
+            <height>3000</height>
+        </size>
+    </property>
+    <property name="minimumSize">
+        <size>
+            <width>50</width>
+            <height>50</height>
+        </size>
     </property>
     <property name="caption">
         <string>Asset Manager</string>
@@ -494,7 +507,7 @@
             <cstring>fileNewAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>filenew</iconset>
+            <iconset>:/filenew</iconset>
         </property>
         <property name="text">
             <string>New Asset</string>
@@ -511,7 +524,7 @@
             <cstring>newVectorResourceAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>vector_asset.png</iconset>
+            <iconset>:/vector_asset.png</iconset>
         </property>
         <property name="text">
             <string>New Vector Resource</string>
@@ -522,7 +535,7 @@
             <cstring>newImageryResourceAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>imagery_asset.png</iconset>
+            <iconset>:/imagery_asset.png</iconset>
         </property>
         <property name="text">
             <string>New Imagery Resource</string>
@@ -536,7 +549,7 @@
             <cstring>newTerrainResourceAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>terrain_asset.png</iconset>
+            <iconset>:/terrain_asset.png</iconset>
         </property>
         <property name="text">
             <string>New Terrain Resource</string>
@@ -547,7 +560,7 @@
             <cstring>newVectorProjectAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>vector_project.png</iconset>
+            <iconset>:/vector_project.png</iconset>
         </property>
         <property name="text">
             <string>New Vector Project</string>
@@ -558,7 +571,7 @@
             <cstring>newImageryProjectAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>imagery_project.png</iconset>
+            <iconset>:/imagery_project.png</iconset>
         </property>
         <property name="text">
             <string>New Imagery Project</string>
@@ -569,7 +582,7 @@
             <cstring>newTerrainProjectAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>terrain_project.png</iconset>
+            <iconset>:/terrain_project.png</iconset>
         </property>
         <property name="text">
             <string>New Terrain Project</string>
@@ -580,7 +593,7 @@
             <cstring>newMapLayerAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>map_layer.png</iconset>
+            <iconset>:/map_layer.png</iconset>
         </property>
         <property name="text">
             <string>New Map Layer</string>
@@ -591,7 +604,7 @@
             <cstring>newMapProjectAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>map_project.png</iconset>
+            <iconset>:/map_project.png</iconset>
         </property>
         <property name="text">
             <string>New Map Project</string>
@@ -602,7 +615,7 @@
             <cstring>newDatabaseAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>database.png</iconset>
+            <iconset>:/database.png</iconset>
         </property>
         <property name="text">
             <string>New Earth (3D) Database</string>
@@ -635,7 +648,7 @@
             <cstring>newMapDatabaseAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>map_database.png</iconset>
+            <iconset>:/map_database.png</iconset>
         </property>
         <property name="text">
             <string>New Map (Flat Projection) Database</string>
@@ -654,7 +667,7 @@
             <cstring>newImageryResourceMercatorAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>imagery_asset_mercator.png</iconset>
+            <iconset>:/imagery_asset_mercator.png</iconset>
         </property>
         <property name="text">
             <string>New Mercator Imagery Resource</string>
@@ -665,7 +678,7 @@
             <cstring>newImageryProjectMercatorAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>imagery_project_mercator.png</iconset>
+            <iconset>:/imagery_project_mercator.png</iconset>
         </property>
         <property name="text">
             <string>New Mercator Imagery Project</string>
@@ -676,7 +689,7 @@
             <cstring>newMapDatabaseMercatorAction</cstring>
         </property>
         <property name="iconSet">
-            <iconset>map_database_mercator.png</iconset>
+            <iconset>:/map_database_mercator.png</iconset>
         </property>
         <property name="text">
             <string>New Mercator Map Database</string>
@@ -877,6 +890,9 @@
 </slots>
 <pixmapinproject/>
 <layoutdefaults spacing="6" margin="11"/>
+<includes>
+    <include location="global" impldecl="in declaration">Qt/qobjectdefs.h</include>
+</includes>
 <includehints>
     <includehint>AssetTableView.h</includehint>
     <includehint>AssetIconView.h</includehint>

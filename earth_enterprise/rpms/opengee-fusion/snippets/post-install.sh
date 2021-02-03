@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2018 The Open GEE Contributors
+# Copyright 2018-2020 The Open GEE Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 # NOTE: requires xmllint from libxml2-utils
 
+umask 002
 
 #------------------------------------------------------------------------------
 # Definitions
@@ -50,8 +51,7 @@ main_postinstall()
 
     setup_fusion_daemon
 
-    chown "root:$GEGROUP" "$BASEINSTALLDIR_VAR/run"
-    chown "root:$GEGROUP" "$BASEINSTALLDIR_VAR/log"
+    fix_file_permissions
 
     check_fusion_master_or_slave
 
@@ -84,7 +84,7 @@ create_system_main_directories()
 }
 
 compare_asset_root_publishvolume()
-{    
+{
     if [ -f "$BASEINSTALLDIR_OPT/gehttpd/conf.d/stream_space" ]; then
         PUBLISH_ROOT_VOLUME="$(cut -d' ' -f3 /opt/google/gehttpd/conf.d/stream_space | cut -d'/' -f2 | $NEWLINECLEANER)"
 
@@ -160,13 +160,13 @@ install_or_upgrade_asset_root()
             cat <<END
 
 The asset root must be upgraded to work with the current version of $GEEF $GEE_VERSION.
-You cannot use an upgraded asset root with older versions of $GEEF. 
+You cannot use an upgraded asset root with older versions of $GEEF.
 Consider backing up your asset root. $GEEF will warn you when
 attempting to run with a non-upgraded asset root.
 
 $UPGRADE_MESSAGE
 END
-            
+
             # Note: we don't want to do the recursive chown on the asset root
             # unless absolutely necessary
             "$BASEINSTALLDIR_OPT/bin/geconfigureassetroot" --fixmasterhost \
@@ -194,6 +194,18 @@ final_fusion_service_configuration()
       echo "Warning: chcon labeling failed. SELinux is probably not enabled"
 
     service gefusion start
+}
+
+fix_file_permissions()
+{
+    chown "root:$GEGROUP" "$BASEINSTALLDIR_VAR/run"
+    chown "root:$GEGROUP" "$BASEINSTALLDIR_VAR/log"
+    chmod -R 555 "$BASEINSTALLDIR_OPT/bin"
+
+    # TODO: Disabled for now...
+    #sgid enabled
+    #chown "root:$GEGROUP" "$BASEINSTALLDIR_OPT/bin/fusion"
+    #chmod g+s "$BASEINSTALLDIR_OPT/bin/fusion"
 }
 
 #-----------------------------------------------------------------

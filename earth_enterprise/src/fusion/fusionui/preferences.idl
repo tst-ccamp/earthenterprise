@@ -15,7 +15,7 @@
 
 
 #include <string>
-#include <qstring.h>
+#include <Qt/qstring.h>
 #include <vector>
 #include <map>
 
@@ -37,7 +37,7 @@ class PrefsConfig {
 
   bool warnOnBadGfxMode = true;
 
-  std::vector< unsigned int>  selectOutlineColor = std::vector< unsigned int> (4, 255);
+  std::vector< unsigned int>  selectOutlineColor = std::vector< unsigned int> (4, 200);
   std::vector< unsigned int>  selectFillColor = std::vector< unsigned int> (4, 0);
   unsigned int selectOutlineLineWidth = 1U;
 
@@ -78,10 +78,10 @@ class PrefsConfig {
       QString("/usr/share/keyhole/datasets/default_imagery.khdb/index");
 
   const QString PrefsConfig::kDefaultImageryIndex =
-      QString(khComposePath(kGESharePath, "datasets/default.gedb"));
+      QString(khComposePath(kGESharePath, "datasets/default.gedb").c_str());
 
   const QString PrefsConfig::kDefaultImageryIndexMercator =
-      QString(khComposePath(kGESharePath, "datasets/default_mercator.kip"));
+      QString(khComposePath(kGESharePath, "datasets/default_mercator.kip").c_str());
 
   const std::map<std::string, std::string> PrefsConfig::kEmptyStringMap;
 

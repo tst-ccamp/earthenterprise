@@ -20,6 +20,7 @@
 #include "common/quadtreepath.h"
 #include "common/khEndian.h"
 #include "common/khStringUtils.h"
+#include "common/khFileUtils.h"
 #include "common/khTileAddr.h"
 #include "common/khConstants.h"
 #include "common/khstrconv.h"
@@ -115,7 +116,7 @@ ServerdbReader::ServerdbReader(geFilePool& file_pool,
   if (config_.db_type == ServerdbConfig::TYPE_GEDB) {
     // Read the server-wide snippet dbroot
     geProtoDbroot server_snippets;
-    if (AbstractFileAccessor::getAccessor(kServerSnippetFile)->Exists(kServerSnippetFile)) {
+    if (khExists(kServerSnippetFile)) {
       server_snippets = geProtoDbroot(kServerSnippetFile,
                                       geProtoDbroot::kProtoFormat);
     }
@@ -208,7 +209,7 @@ ServerdbReader::ServerdbReader(geFilePool& file_pool,
   // tiles if timemachine is not enabled.
   std::string date_channel_map_file_name = config_.index_path + "/" +
     kDatedImageryChannelsFileName;
-  if (AbstractFileAccessor::getAccessor(date_channel_map_file_name)->Exists(date_channel_map_file_name)) {
+  if (khExists(date_channel_map_file_name)) {
     std::string buf;
     file_pool.ReadStringFile(date_channel_map_file_name, &buf);
     std::vector<std::string> tokens;
@@ -357,8 +358,7 @@ const MimeType ServerdbReader::GetData(
       std::uint32_t col;
       GetUint32Arg(arg_map["col"], &col);
       std::string blist = arg_map["blist"];
-      const char last_char = blist[blist.length() - 1];
-      if (last_char != kQuadTreePathSeparator) {
+      if ((blist.empty()) || (blist.back() != kQuadTreePathSeparator)) {
         return GetPacket(request, blist, level, row, col, version, channel, buf,
                          size_only, format,
                          arg_map["ct"] == std::string("c"));

@@ -67,6 +67,7 @@ void usage(const char *prog, const char *msg = 0, ...) {
      "                              command fails or has insufficient\n"
      "                              arguments.\n"
      "  --nochown                   Do not attempt to fix privileges.\n"
+     "  --secure                    Removes world read and write permissions.\n"
      "When creating a new asset root, additional options are available:\n"
      "  --srcvol <dir>              Path to source volume.\n"
      "\n"
@@ -100,8 +101,11 @@ void MakeNewAssetRoot(const AssetRootStatus &status,
                       const std::string &srcvol,
                       const std::string &username,
                       const std::string &groupname,
-                      bool noprompt);
-void RepairExistingAssetRoot(const AssetRootStatus &status, bool noprompt);
+                      bool noprompt,
+                      bool secure);
+void RepairExistingAssetRoot(const AssetRootStatus &status,
+                             bool noprompt,
+                             bool secure);
 void AddVolume(const AssetRootStatus &status,
                const std::string &volume_name, const std::string &volume_dir);
 void RemoveVolume(const AssetRootStatus &status, const std::string &volume_name);
@@ -122,6 +126,7 @@ int main(int argc, char *argv[]) {
     bool repair      = false;
     bool fixmasterhost = false;
     bool listvolumes = false;
+    bool secure = false;
     std::string assetroot = CommandlineAssetRootDefault();
     std::string username = Systemrc::FusionUsername();
     std::string groupname = Systemrc::UserGroupname();
@@ -144,6 +149,7 @@ int main(int argc, char *argv[]) {
     options.opt("listvolumes", listvolumes);
     options.opt("noprompt", noprompt);
     options.opt("nochown", nochown);
+    options.opt("secure", secure);
     options.setExclusiveRequired(makeset(std::string("new"),
                                          std::string("repair"),
                                          std::string("editvolumes"),
@@ -184,7 +190,7 @@ int main(int argc, char *argv[]) {
 
     if (create) {
       printf("Making new assetroot ....\n");
-      MakeNewAssetRoot(status, srcvol, username, groupname, noprompt);
+      MakeNewAssetRoot(status, srcvol, username, groupname, noprompt, secure);
       if (!noprompt && !editvolumes &&
           geprompt::confirm(kh::tr(
                                 "Would you like to add more volumes"),
@@ -194,7 +200,7 @@ int main(int argc, char *argv[]) {
     }
     // don't make an if-ladder here. We need to run multiple sometimes
     if (repair) {
-      RepairExistingAssetRoot(status, noprompt);
+      RepairExistingAssetRoot(status, noprompt, secure);
     }
     if (editvolumes) {
       EditVolumes(status);
@@ -210,19 +216,19 @@ int main(int argc, char *argv[]) {
       if (index == std::string::npos) {
         throw khException(kh::tr("'%1' isn't a valid volume specifier.\n"
                              "Use --addvolume <volume_name>:<dir>")
-                      .arg(addvolume));
+                      .arg(addvolume.c_str()));
       }
       std::string volume_name = addvolume.substr(0, index);
       std::string volume_directory = addvolume.substr(index+1);
       if (volume_name.empty()) {
         throw khException(kh::tr("'%1' is missing a volume name.\n"
                              "Use --addvolume <volume_name>:<dir>")
-                      .arg(addvolume));
+                      .arg(addvolume.c_str()));
       }
       if (volume_directory.empty()) {
         throw khException(kh::tr("'%1' is missing a volume directory.\n"
                              "Use --addvolume <volume_name>:<dir>")
-                      .arg(addvolume));
+                      .arg(addvolume.c_str()));
       }
       AddVolume(status, volume_name, volume_directory);
     }
@@ -249,7 +255,7 @@ void ValidateAssetRootForConfigure(const AssetRootStatus &status,
   QString UseNewMsg = kh::tr(
       "%1 isn't an existing assetroot.\n"
       "You must use --new to make a new one.")
-      .arg(status.assetroot_);
+      .arg(status.assetroot_.c_str());
 
   if (status.assetroot_.empty()) {
     throw khException(kh::tr("No asset root has been specified."));
@@ -274,7 +280,7 @@ void ValidateAssetRootForConfigure(const AssetRootStatus &status,
         "%1 already exists.\n"
         "But it does not contain a valid asset root.\n"
         "Do you want to create a new asset root there")
-                                  .arg(status.assetroot_), 'N')) {
+                                  .arg(status.assetroot_.c_str()), 'N')) {
       throw khException(kh::tr("Aborted by user"));
     }
 
@@ -286,7 +292,7 @@ void ValidateAssetRootForConfigure(const AssetRootStatus &status,
     throw khException(
         kh::tr("%1 is an existing assetroot.\n"
                "You cannot configure it with --new.")
-        .arg(status.assetroot_));
+        .arg(status.assetroot_.c_str()));
   }
 
 
@@ -294,9 +300,9 @@ void ValidateAssetRootForConfigure(const AssetRootStatus &status,
     throw khException(kh::tr(
         "%1 is currently defined as the master for %2.\n"
         "You must run geconfigureassetroot from %3")
-                      .arg(status.master_host_)
-                      .arg(status.assetroot_)
-                      .arg(status.master_host_));
+                      .arg(status.master_host_.c_str())
+                      .arg(status.assetroot_.c_str())
+                      .arg(status.master_host_.c_str()));
   }
 
   if (!isfixmaster && status.SoftwareNeedsUpgrade()) {
@@ -321,7 +327,8 @@ void MakeNewAssetRoot(const AssetRootStatus &status,
                       const std::string &in_srcvol,
                       const std::string &username,
                       const std::string &groupname,
-                      bool noprompt) {
+                      bool noprompt,
+                      bool secure) {
   geUserId fusion_user(username, groupname);
 
   // escalate my permissions and try to create the assetroot
@@ -332,7 +339,7 @@ void MakeNewAssetRoot(const AssetRootStatus &status,
         CAP_CHOWN,            // let me chown files
         CAP_FOWNER);          // let me chmod files I dont own
 
-    if (MakeSpecialDirs(status.assetroot_, fusion_user)) {
+    if (MakeSpecialDirs(status.assetroot_, fusion_user, secure)) {
       // we had to chown some of them. There might be more too.
       // Let's just chown the whole tree right now
       PromptUserAndFixOwnership(status.assetroot_, noprompt);
@@ -402,9 +409,11 @@ void MakeNewAssetRoot(const AssetRootStatus &status,
 }
 
 
-void RepairExistingAssetRoot(const AssetRootStatus &status, bool noprompt) {
+void RepairExistingAssetRoot(const AssetRootStatus &status,
+                             bool noprompt,
+                             bool secure) {
   // fix perms on special files
-  FixSpecialPerms(status.assetroot_);
+  FixSpecialPerms(status.assetroot_, secure);
 
   if (!status.AssetRootNeedsUpgrade() && !status.unique_ids_ok_) {
     // if we have to upgrade, don't try to fix the ids yet.
@@ -435,9 +444,9 @@ void listCurrentVolumes(VolumeDefList *const voldefs, std::vector<std::string> v
 
 void ListHostVolumes(const std::string &host, VolumeDefList *const voldefs) {
   std::vector<std::string> volnames;
-  for (VolumeDefList::VolumeDefMap::const_iterator v = voldefs->volumedefs.begin(); v != voldefs->volumedefs.end(); ++v) {
-    if (v->second.host == host) {
-      volnames.push_back(v->first);
+  for (const auto& v : voldefs->volumedefs) {
+    if (v.second.host == host) {
+      volnames.push_back(v.first);
     }
   }
   listCurrentVolumes(voldefs, volnames);
@@ -456,14 +465,13 @@ void ListVolumes(const AssetRootStatus &status) {
 void EditHostVolumes(const std::string &host, VolumeDefList *const voldefs) {
   std::string assetroot;
   std::vector<std::string> volnames;
-  for (VolumeDefList::VolumeDefMap::const_iterator v =
-         voldefs->volumedefs.begin();
-       v != voldefs->volumedefs.end(); ++v) {
-    if (v->first == geAssetRoot::VolumeName) {
-      assetroot = v->second.netpath;
+
+  for (const auto& v : voldefs->volumedefs) {
+    if (v.first == geAssetRoot::VolumeName) {
+      assetroot = v.second.netpath;
     }
-    if (v->second.host == host) {
-      volnames.push_back(v->first);
+    if (v.second.host == host) {
+      volnames.push_back(v.first);
     }
   }
 
@@ -549,7 +557,7 @@ void AddVolume(const AssetRootStatus &status,
           voldefs.volumedefs.find(volume_name);
   if (found != voldefs.volumedefs.end()) {
     throw khException(kh::tr("A volume named '%1' already exists")
-                  .arg(volume_name));
+                  .arg(volume_name.c_str()));
   }
 
   // Check for a unique netpath.
@@ -558,7 +566,7 @@ void AddVolume(const AssetRootStatus &status,
        v != voldefs.volumedefs.end(); ++v) {
     if (v->second.netpath == volume_dir) {
        throw khException(kh::tr("A netpath named '%1' already exists")
-                .arg(volume_name));
+                .arg(volume_name.c_str()));
     }
   }
 
@@ -589,7 +597,7 @@ void RemoveVolume(const AssetRootStatus &status,
           voldefs.volumedefs.find(volume_name);
   if (found == voldefs.volumedefs.end()) {
     throw khException(kh::tr("The volume named '%1' does not exist")
-                  .arg(volume_name));
+                  .arg(volume_name.c_str()));
   }
 
   // Update the Volume def.
