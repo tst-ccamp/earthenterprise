@@ -233,8 +233,9 @@ def _GetCommitRawDescription():
     """Returns description of current commit"""
 
     args = ['--tags', '--match', '[0-9]*\.[0-9]*\.[0-9]*\-*']
-    if _IsGitDescribeFirstParentSupported():
-        args.insert(0, '--first-parent')
+    # Commented out to debug
+    # if _IsGitDescribeFirstParentSupported():
+    args.insert(0, '--first-parent')
 
     repo = _GetRepository()
     raw = repo.git.describe(*args)
