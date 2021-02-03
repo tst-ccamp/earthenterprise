@@ -1,11 +1,7 @@
 
 name: C/C++ CI
 
-on:
-  push:
-    branches: [ $default-branch ]
-  pull_request:
-    branches: [ $default-branch ]
+on: push
 
 jobs:
   build:
@@ -33,6 +29,9 @@ jobs:
       run: CPP_STD=11 BUILD_TYPE=release scripts/ci/build_third_party.sh
     - name: build fusion and test
       run: scripts/ci/build_fusion_and_test.sh
+      env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
 # cache:
