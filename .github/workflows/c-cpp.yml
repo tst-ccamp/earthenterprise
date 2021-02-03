@@ -10,6 +10,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: do fetch to get all available tags/names
+      run: git fetch --tags --depth=500 && git lfs pull && git --version
     - name: prepare_os part 1
       run: sudo apt-get update -qq
     - name: prepare_os part 1
@@ -26,8 +28,7 @@ jobs:
             openssl shunit2 git git-lfs libqt4-dev qt4-default libqt4-opengl-dev
             python-dev python-git python-imaging python-setuptools python-psycopg2 python-lxml
             swig xorg-dev zlib1g-dev
-    - name: do fetch to get all available tags/names
-      run: git fetch --tags --depth=500 && git lfs pull
+    
     - name: build third party
       run: CPP_STD=11 BUILD_TYPE=release scripts/ci/build_third_party.sh
     - name: build fusion and test
