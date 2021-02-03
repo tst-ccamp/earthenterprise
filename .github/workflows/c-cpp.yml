@@ -27,7 +27,7 @@ jobs:
             python-dev python-git python-imaging python-setuptools python-psycopg2 python-lxml
             swig xorg-dev zlib1g-dev
     - name: do fetch to get all available tags/names
-      run: git fetch --depth=500
+      run: git fetch --tags --depth=500 && git lfs pull
     - name: build third party
       run: CPP_STD=11 BUILD_TYPE=release scripts/ci/build_third_party.sh
     - name: build fusion and test
