@@ -10,8 +10,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: prepare_os
+    - name: prepare_os part 1
       run: sudo apt-get update -qq
+    - name: prepare_os part 1
       run: sudo apt-get install -qq
             alien bison++ bisonc++ cmake doxygen freeglut3-dev flex gettext
             libboost-all-dev libc6 libc6-dev libcap-dev libfreetype6 libfreetype6-dev
