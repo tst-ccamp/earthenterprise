@@ -222,7 +222,8 @@ def _IsGitDescribeFirstParentSupported():
         repo = _GetRepository()
         repo.git.describe('--first-parent')
         return True
-    except git.exc.GitCommandError:
+    except git.exc.GitCommandError as e:
+        print(e)
         pass
 
     return False
