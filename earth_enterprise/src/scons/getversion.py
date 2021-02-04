@@ -222,8 +222,7 @@ def _IsGitDescribeFirstParentSupported():
         repo = _GetRepository()
         repo.git.describe('--first-parent')
         return True
-    except git.exc.GitCommandError as e:
-        print(e)
+    except git.exc.GitCommandError:
         pass
 
     return False
@@ -233,9 +232,8 @@ def _GetCommitRawDescription():
     """Returns description of current commit"""
 
     args = ['--tags', '--match', '[0-9]*\.[0-9]*\.[0-9]*\-*']
-    # Commented out to debug
-    # if _IsGitDescribeFirstParentSupported():
-    args.insert(0, '--first-parent')
+    if _IsGitDescribeFirstParentSupported():
+        args.insert(0, '--first-parent')
 
     repo = _GetRepository()
     raw = repo.git.describe(*args)
