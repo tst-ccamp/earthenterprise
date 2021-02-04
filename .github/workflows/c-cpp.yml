@@ -13,7 +13,7 @@ jobs:
     - name: do fetch to get all available tags/names
       run: git fetch --tags --depth=500 && git pull --tags && git --version
     - name: debug git describe 
-      run: git tag && git describe --first-parent --tags --always --match [0-9]*\.[0-9]*\.[0-9]*\-* 
+      run: git describe --first-parent && git describe --first-parent --tags --always --match [0-9]*\.[0-9]*\.[0-9]*\-* 
     - name: prepare_os part 1
       run: sudo apt-get update -qq
     - name: prepare_os part 1
