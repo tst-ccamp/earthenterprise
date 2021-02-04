@@ -32,7 +32,7 @@ jobs:
             swig xorg-dev zlib1g-dev
     
     - name: build third party
-      run: CPP_STD=11 BUILD_TYPE=release scripts/ci/build_third_party.sh
+      run: CPP_STD=11 BUILD_TYPE=release bash -x scripts/ci/build_third_party.sh
     - name: build fusion and test
       run: scripts/ci/build_fusion_and_test.sh
       env:
